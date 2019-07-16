@@ -168,6 +168,7 @@ pub fn open<P: ?Sized + NixPath>(path: &P, oflag: OFlag, mode: Mode) -> Result<R
     Errno::result(fd)
 }
 
+#[cfg(not(target_os = "redox"))]
 pub fn openat<P: ?Sized + NixPath>(dirfd: RawFd, path: &P, oflag: OFlag, mode: Mode) -> Result<RawFd> {
     let fd = path.with_nix_path(|cstr| {
         let modebits = c_uint::from(mode.bits());
@@ -176,6 +177,7 @@ pub fn openat<P: ?Sized + NixPath>(dirfd: RawFd, path: &P, oflag: OFlag, mode: M
     Errno::result(fd)
 }
 
+#[cfg(not(target_os = "redox"))]
 pub fn renameat<P1: ?Sized + NixPath, P2: ?Sized + NixPath>(old_dirfd: Option<RawFd>, old_path: &P1,
                                                             new_dirfd: Option<RawFd>, new_path: &P2)
                                                             -> Result<()> {
@@ -208,6 +210,7 @@ pub fn readlink<P: ?Sized + NixPath>(path: &P) -> Result<OsString> {
 }
 
 
+#[cfg(not(target_os = "redox"))]
 pub fn readlinkat<P: ?Sized + NixPath>(dirfd: RawFd, path: &P) -> Result<OsString> {
     let mut v = Vec::with_capacity(libc::PATH_MAX as usize);
     let res = path.with_nix_path(|cstr| {
