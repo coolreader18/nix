@@ -32,7 +32,7 @@ cfg_if! {
                 }
             }
         }
-    } else {
+    } else if #[cfg(not(target_os = "redox"))] {
         macro_rules! require_capability {
             ($capname:ident) => {}
         }
@@ -94,7 +94,7 @@ cfg_if! {
                 }
             }
         }
-    } else {
+    } else if #[cfg(not(target_os = "redox"))] {
         macro_rules! skip_if_seccomp {
             ($name:expr) => {}
         }

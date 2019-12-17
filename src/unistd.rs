@@ -9,9 +9,9 @@ use fcntl::FcntlArg::F_SETFD;
 use libc::{self, c_char, c_void, c_int, c_long, c_uint, size_t, pid_t, off_t,
            uid_t, gid_t, mode_t, PATH_MAX};
 use std::{fmt, mem, ptr};
-use std::ffi::{CString, CStr, OsString};
+use std::ffi::{CStr, OsString};
 #[cfg(not(target_os = "redox"))]
-use std::ffi::{OsStr};
+use std::ffi::{CString, OsStr};
 use std::os::unix::ffi::OsStringExt;
 #[cfg(not(target_os = "redox"))]
 use std::os::unix::ffi::OsStrExt;
@@ -525,7 +525,9 @@ pub fn mkfifo<P: ?Sized + NixPath>(path: &P, mode: Mode) -> Result<()> {
 /// [mkfifoat(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/mkfifoat.html).
 // mkfifoat is not implemented in OSX or android
 #[inline]
-#[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "android")))]
+#[cfg(not(any(
+    target_os = "macos", target_os = "ios",
+    target_os = "android", target_os = "redox")))]
 pub fn mkfifoat<P: ?Sized + NixPath>(dirfd: Option<RawFd>, path: &P, mode: Mode) -> Result<()> {
     let res = path.with_nix_path(|cstr| unsafe {
         libc::mkfifoat(at_rawfd(dirfd), cstr.as_ptr(), mode.bits() as mode_t)
@@ -1203,6 +1205,7 @@ pub enum LinkatFlags {
 ///
 /// # References
 /// See also [linkat(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/linkat.html)
+#[cfg(not(target_os = "redox"))] // RedoxFS does not support symlinks yet
 pub fn linkat<P: ?Sized + NixPath>(
     olddirfd: Option<RawFd>,
     oldpath: &P,
@@ -1325,7 +1328,6 @@ pub fn fsync(fd: RawFd) -> Result<()> {
 // TODO: exclude only Apple systems after https://github.com/rust-lang/libc/pull/211
 #[cfg(any(target_os = "linux",
           target_os = "android",
-          target_os = "redox",
           target_os = "emscripten"))]
 #[inline]
 pub fn fdatasync(fd: RawFd) -> Result<()> {
@@ -1638,6 +1640,7 @@ pub fn initgroups(user: &CStr, group: Gid) -> Result<()> {
 ///
 /// See also [pause(2)](http://pubs.opengroup.org/onlinepubs/9699919799/functions/pause.html).
 #[inline]
+#[cfg(not(target_os = "redox"))]
 pub fn pause() {
     unsafe { libc::pause() };
 }
@@ -2557,6 +2560,7 @@ pub fn access<P: ?Sized + NixPath>(path: &P, amode: AccessFlags) -> Result<()> {
 /// fields are based on the user's locale, which could be non-UTF8, while other fields are
 /// guaranteed to conform to [`NAME_REGEX`](https://serverfault.com/a/73101/407341), which only
 /// contains ASCII.
+#[cfg(not(target_os = "redox"))] // RedoxFS does not support passwd
 #[derive(Debug, Clone, PartialEq)]
 pub struct User {
     /// Username
@@ -2585,6 +2589,7 @@ pub struct User {
     pub expire: libc::time_t
 }
 
+#[cfg(not(target_os = "redox"))] // RedoxFS does not support passwd
 impl From<&libc::passwd> for User {
     fn from(pw: &libc::passwd) -> User {
         unsafe {
@@ -2608,6 +2613,7 @@ impl From<&libc::passwd> for User {
     }
 }
 
+#[cfg(not(target_os = "redox"))] // RedoxFS does not support passwd
 impl User {
     fn from_anything<F>(f: F) -> Result<Option<Self>>
     where
@@ -2685,6 +2691,7 @@ impl User {
 }
 
 /// Representation of a Group, based on `libc::group`
+#[cfg(not(target_os = "redox"))] // RedoxFS does not support passwd
 #[derive(Debug, Clone, PartialEq)]
 pub struct Group {
     /// Group name
@@ -2695,6 +2702,7 @@ pub struct Group {
     pub mem: Vec<String>
 }
 
+#[cfg(not(target_os = "redox"))] // RedoxFS does not support passwd
 impl From<&libc::group> for Group {
     fn from(gr: &libc::group) -> Group {
         unsafe {
@@ -2707,6 +2715,7 @@ impl From<&libc::group> for Group {
     }
 }
 
+#[cfg(not(target_os = "redox"))] // RedoxFS does not support passwd
 impl Group {
     unsafe fn members(mem: *mut *mut c_char) -> Vec<String> {
         let mut ret = Vec::new();
