@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - ReleaseDate
 ### Added
+- Added `env::clearenv()`: calls `libc::clearenv` on platforms
+  where it's available, and clears the environment of all variables
+  via `std::env::vars` and `std::env::remove_var` on others.
+  (#[1185](https://github.com/nix-rust/nix/pull/1185))
+- `FsType` inner value made public.
+  (#[1187](https://github.com/nix-rust/nix/pull/1187))
+- Added `unistd::setfsuid` and `unistd::setfsgid` to set the user or group
+  identity for filesystem checks per-thread.
+  (#[1163](https://github.com/nix-rust/nix/pull/1163))
+- Derived `Ord`, `PartialOrd` for `unistd::Pid` (#[1189](https://github.com/nix-rust/nix/pull/1189))
+
+### Changed
+### Fixed
+### Removed
+
+## [0.17.0] - 3 February 2020
+### Added
 - Add `CLK_TCK` to `SysconfVar`
   (#[1177](https://github.com/nix-rust/nix/pull/1177))
 ### Changed
